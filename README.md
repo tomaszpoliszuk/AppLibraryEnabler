@@ -1,3 +1,5 @@
+## Work in progress - currently does not working - for partially working solution please use my other tweaks - [App Library Controller](https://github.com/tomaszpoliszuk/AppLibraryController) and [Activator Listeners for App Library](https://github.com/tomaszpoliszuk/ActivatorListenersForAppLibrary)
+
 # App Library Enabler
 Enable App Library
 

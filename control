@@ -3,7 +3,7 @@ Depends: firmware (>= 14.0), mobilesubstrate, cy+model.ipad
 Name: App Library Enabler
 Version: 0.25
 Architecture: iphoneos-arm
-Description: Turn on App Library on iPadOS
+Description: Enable App Library on iPadOS
 Author: Tomasz Poliszuk
 Section: Tweaks
 dev: tomaszpoliszuk

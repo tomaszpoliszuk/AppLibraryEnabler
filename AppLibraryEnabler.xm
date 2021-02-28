@@ -25,6 +25,15 @@
 }
 %end
 
+%hook SBRootFolderView
+- (bool)_shouldIgnoreOverscrollOnLastPageForCurrentOrientation {
+	return YES;
+}
+- (bool)_shouldIgnoreOverscrollOnLastPageForOrientation:(long long)arg1 {
+	return YES;
+}
+%end
+
 %ctor {
 	%init;
 }

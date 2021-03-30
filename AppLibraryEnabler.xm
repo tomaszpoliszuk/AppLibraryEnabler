@@ -34,6 +34,19 @@
 }
 %end
 
+%hook SBIconView
+- (bool)allowsAccessoryView {
+//	TODO add this toggle in settings for iPads
+	bool origValue = %orig;
+	if ( [[self _viewControllerForAncestor] isKindOfClass:%c(SBHIconLibraryTableViewController)] ) {
+		NSMutableDictionary *defaults = [NSMutableDictionary dictionaryWithContentsOfFile:[NSString stringWithFormat:@"%@/Library/Preferences/com.apple.springboard.plist", NSHomeDirectory()]];
+		bool sbHomeScreenShowsBadgesInAppLibrary = [[defaults objectForKey:@"SBHomeScreenShowsBadgesInAppLibrary"] boolValue];
+		return sbHomeScreenShowsBadgesInAppLibrary;
+	}
+	return origValue;
+}
+%end
+
 %ctor {
 	%init;
 }

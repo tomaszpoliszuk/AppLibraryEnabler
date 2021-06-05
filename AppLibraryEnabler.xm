@@ -16,6 +16,13 @@
  */
 
 
+@interface UIView (AppLibraryEnabler)
+- (id)_viewControllerForAncestor;
+@end
+
+@interface SBIconView : UIView
+@end
+
 %hook SBIconController
 - (bool)isAppLibraryAllowed {
 	return YES;
@@ -31,6 +38,16 @@
 }
 - (bool)_shouldIgnoreOverscrollOnLastPageForOrientation:(long long)arg1 {
 	return YES;
+}
+%end
+
+%hook SBHIconManager
+- (bool)rootFolder:(id)arg1 canAddIcon:(id)arg2 toIconList:(id)arg3 inFolder:(id)arg4 {
+	bool origValue = %orig;
+	if ( [arg4 isKindOfClass:%c( SBHLibraryCategoriesRootFolder )] ) {
+		return YES;
+	}
+	return origValue;
 }
 %end
 

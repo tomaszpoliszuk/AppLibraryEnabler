@@ -23,6 +23,29 @@
 @interface SBIconView : UIView
 @end
 
+@interface SBHSearchBar : UIView
+@property (assign,nonatomic) UIEdgeInsets searchTextFieldHorizontalEdgeInsets;
+@end
+
+@protocol SBHOccludable
+@end
+
+@interface SBHomeScreenOverlayViewController : UIViewController
+@property (nonatomic, retain) UIViewController<SBHOccludable> *rightSidebarViewController;
+@end
+
+
+@interface SBHLibrarySearchController : UIViewController
+@end
+
+@interface SBNestingViewController : UIViewController
+@end
+@interface SBFolderController : SBNestingViewController
+@end
+@interface SBHLibraryPodFolderController : SBFolderController
+@property (nonatomic,readonly) UIView * containerView;
+@end
+
 %hook SBIconController
 - (bool)isAppLibraryAllowed {
 	return YES;
@@ -51,6 +74,135 @@
 }
 %end
 
+%hook SBHomeScreenOverlayViewController
+-(double)presentationProgress {
+	double origValue = %orig;
+	[[self rightSidebarViewController].view setAlpha:origValue];
+	return origValue;
+}
+%end
+
+%hook SBHLibrarySearchController
+- (void)viewDidLoad {
+	%orig;
+	SBHSearchBar *searchBar = [self valueForKey:@"_searchBar"];
+	UIView *containerView = [self valueForKey:@"_containerView"];
+	UIView *contentContainerView = [self valueForKey:@"_contentContainerView"];
+	UIView *searchResultsContainerView = [self valueForKey:@"_searchResultsContainerView"];
+
+	CGRect selfFrame = self.view.frame;
+	[containerView setFrame:selfFrame];
+	[contentContainerView setFrame:selfFrame];
+	[searchResultsContainerView setFrame:selfFrame];
+
+	UIEdgeInsets searchTextFieldHorizontalEdgeInsets = [searchBar searchTextFieldHorizontalEdgeInsets];
+
+	searchTextFieldHorizontalEdgeInsets.left = 23;
+	searchTextFieldHorizontalEdgeInsets.right = 23;
+
+	[searchBar setSearchTextFieldHorizontalEdgeInsets:searchTextFieldHorizontalEdgeInsets];
+
+}
+- (void)viewWillAppear:(BOOL)arg1 {
+	%orig;
+	SBHSearchBar *searchBar = [self valueForKey:@"_searchBar"];
+	UIView *containerView = [self valueForKey:@"_containerView"];
+	UIView *contentContainerView = [self valueForKey:@"_contentContainerView"];
+	UIView *searchResultsContainerView = [self valueForKey:@"_searchResultsContainerView"];
+
+	CGRect selfFrame = self.view.frame;
+
+	[containerView setFrame:selfFrame];
+	[contentContainerView setFrame:selfFrame];
+	[searchResultsContainerView setFrame:selfFrame];
+
+	UIEdgeInsets searchTextFieldHorizontalEdgeInsets = [searchBar searchTextFieldHorizontalEdgeInsets];
+
+	searchTextFieldHorizontalEdgeInsets.left = 23;
+	searchTextFieldHorizontalEdgeInsets.right = 23;
+
+	[searchBar setSearchTextFieldHorizontalEdgeInsets:searchTextFieldHorizontalEdgeInsets];
+}
+- (void)viewWillLayoutSubviews {
+	%orig;
+	SBHSearchBar *searchBar = [self valueForKey:@"_searchBar"];
+	UIView *containerView = [self valueForKey:@"_containerView"];
+	UIView *contentContainerView = [self valueForKey:@"_contentContainerView"];
+	UIView *searchResultsContainerView = [self valueForKey:@"_searchResultsContainerView"];
+
+	CGRect selfFrame = self.view.frame;
+	[containerView setFrame:selfFrame];
+	[contentContainerView setFrame:selfFrame];
+	[searchResultsContainerView setFrame:selfFrame];
+
+	UIEdgeInsets searchTextFieldHorizontalEdgeInsets = [searchBar searchTextFieldHorizontalEdgeInsets];
+
+	searchTextFieldHorizontalEdgeInsets.left = 23;
+	searchTextFieldHorizontalEdgeInsets.right = 23;
+
+	[searchBar setSearchTextFieldHorizontalEdgeInsets:searchTextFieldHorizontalEdgeInsets];
+}
+%end
+
+%hook SBHLibraryPodFolderController
+- (void)viewDidLoad {
+	%orig;
+	UIView *containerView = [self containerView];
+	CGRect containerFrame = containerView.frame;
+	[self.view setFrame:containerFrame];
+}
+- (void)viewWillAppear:(BOOL)arg1 {
+	%orig;
+	UIView *containerView = [self containerView];
+	CGRect containerFrame = containerView.frame;
+	[self.view setFrame:containerFrame];
+}
+- (void)viewWillLayoutSubviews {
+	%orig;
+	UIView *containerView = [self containerView];
+	CGRect containerFrame = containerView.frame;
+	[self.view setFrame:containerFrame];
+}
+%end
+
+%hook _SBHLibraryPodIconListView
+- (CGRect)frame {
+	CGRect origValue = %orig;
+	CGRect newContainerFrame = origValue;
+	newContainerFrame.size.width = 393;
+	return newContainerFrame;
+}
+
+- (double)horizontalIconPadding {
+	return 27;
+}
+- (double)verticalIconPadding {
+	return 27;
+}
+- (CGRect)iconLayoutRect {
+	CGRect origValue = %orig;
+	CGRect newFrame = origValue;
+	newFrame.size.width = 393;
+	return newFrame;
+}
+
+- (CGSize)iconSpacing {
+	CGSize origValue = %orig;
+	CGSize newSize = origValue;
+	newSize.width = 27;
+	newSize.height = 27;
+	return newSize;
+}
+- (CGSize)effectiveIconSpacing {
+	CGSize origValue = %orig;
+	CGSize newSize = origValue;
+	newSize.width = 27;
+	newSize.height = 27;
+	return newSize;
+}
+%end
+
+
 %hook SBIconView
 - (bool)allowsAccessoryView {
 //	TODO add this toggle in settings for iPads
@@ -62,6 +214,26 @@
 	}
 	return origValue;
 }
+%end
+
+
+%hook SBHIconManager
+- (bool)iconLocationAllowsBadging:(id)arg1 {
+//	bool origValue = %orig;
+//	if ( [arg1 isKindOfClass:%c( SBHIconLibraryTableViewController )] ) {
+		return YES;
+//	}
+//	return origValue;
+}
+//												- (bool)iconLocationAllowsBadging:(id)arg1 {
+//													bool origValue = %orig;
+//												//	NSLog(@"[AppLibraryEnabler] SBHIconManager iconLocationAllowsBadging = %d", origValue);
+//												//	NSLog(@"[AppLibraryEnabler] SBHIconManager iconLocationAllowsBadging arg1 = %@", arg1);
+//													if ( [arg1 isKindOfClass:%c( SBHIconLibraryTableViewController )] ) {
+//														return [self showsBadgesInAppLibrary];
+//													}
+//													return origValue;
+//												}
 %end
 
 %ctor {

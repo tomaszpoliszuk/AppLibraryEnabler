@@ -3,8 +3,7 @@
  *
  * App Library Enabler is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * the Free Software Foundation, either version 3 of the License.
  *
  * App Library Enabler is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -205,35 +204,14 @@
 
 %hook SBIconView
 - (bool)allowsAccessoryView {
-//	TODO add this toggle in settings for iPads
 	bool origValue = %orig;
-	if ( [[self _viewControllerForAncestor] isKindOfClass:%c(SBHIconLibraryTableViewController)] ) {
+	if ( [[self _viewControllerForAncestor] isKindOfClass:%c( SBHIconLibraryTableViewController )] || [[self _viewControllerForAncestor] isKindOfClass:%c( SBHLibraryCategoryIconViewController )] || [[self _viewControllerForAncestor] isKindOfClass:%c( SBHLibraryPodCategoryFolderController )] ) {
 		NSMutableDictionary *defaults = [NSMutableDictionary dictionaryWithContentsOfFile:[NSString stringWithFormat:@"%@/Library/Preferences/com.apple.springboard.plist", NSHomeDirectory()]];
 		bool sbHomeScreenShowsBadgesInAppLibrary = [[defaults objectForKey:@"SBHomeScreenShowsBadgesInAppLibrary"] boolValue];
 		return sbHomeScreenShowsBadgesInAppLibrary;
 	}
 	return origValue;
 }
-%end
-
-
-%hook SBHIconManager
-- (bool)iconLocationAllowsBadging:(id)arg1 {
-//	bool origValue = %orig;
-//	if ( [arg1 isKindOfClass:%c( SBHIconLibraryTableViewController )] ) {
-		return YES;
-//	}
-//	return origValue;
-}
-//												- (bool)iconLocationAllowsBadging:(id)arg1 {
-//													bool origValue = %orig;
-//												//	NSLog(@"[AppLibraryEnabler] SBHIconManager iconLocationAllowsBadging = %d", origValue);
-//												//	NSLog(@"[AppLibraryEnabler] SBHIconManager iconLocationAllowsBadging arg1 = %@", arg1);
-//													if ( [arg1 isKindOfClass:%c( SBHIconLibraryTableViewController )] ) {
-//														return [self showsBadgesInAppLibrary];
-//													}
-//													return origValue;
-//												}
 %end
 
 %ctor {

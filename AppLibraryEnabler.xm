@@ -60,15 +60,15 @@
 - (bool)_shouldIgnoreOverscrollOnLastPageForCurrentOrientation {
 	return YES;
 }
-- (bool)_shouldIgnoreOverscrollOnLastPageForOrientation:(long long)arg1 {
+- (bool)_shouldIgnoreOverscrollOnLastPageForOrientation:(NSInteger)orientation {
 	return YES;
 }
 %end
 
 %hook SBHIconManager
-- (bool)rootFolder:(id)arg1 canAddIcon:(id)arg2 toIconList:(id)arg3 inFolder:(id)arg4 {
+- (bool)rootFolder:(id)arg1 canAddIcon:(id)arg2 toIconList:(id)arg3 inFolder:(id)folder {
 	bool origValue = %orig;
-	if ( [arg4 isKindOfClass:%c( SBHLibraryCategoriesRootFolder )] ) {
+	if ( [folder isKindOfClass:%c( SBHLibraryCategoriesRootFolder )] ) {
 		return YES;
 	}
 	return origValue;
@@ -76,8 +76,8 @@
 %end
 
 %hook SBHomeScreenOverlayViewController
--(double)presentationProgress {
-	double origValue = %orig;
+-(CGFloat)presentationProgress {
+	CGFloat origValue = %orig;
 	[[self rightSidebarViewController].view setAlpha:origValue];
 	return origValue;
 }
@@ -160,29 +160,12 @@
 }
 %end
 
-%hook SBIconView
-- (bool)allowsAccessoryView {
-	bool origValue = %orig;
-	if ( [[self _viewControllerForAncestor] isKindOfClass:%c( SBHIconLibraryTableViewController )] || [[self _viewControllerForAncestor] isKindOfClass:%c( SBHLibraryCategoryIconViewController )] || [[self _viewControllerForAncestor] isKindOfClass:%c( SBHLibraryPodCategoryFolderController )] ) {
-		NSMutableDictionary *defaults = [NSMutableDictionary dictionaryWithContentsOfFile:[NSString stringWithFormat:@"%@/Library/Preferences/com.apple.springboard.plist", NSHomeDirectory()]];
-		bool sbHomeScreenShowsBadgesInAppLibrary = [[defaults objectForKey:@"SBHomeScreenShowsBadgesInAppLibrary"] boolValue];
-		return sbHomeScreenShowsBadgesInAppLibrary;
-	}
-	return origValue;
+extern "C" bool _os_feature_enabled_impl(const char *domain, const char *feature);
+%hookf(bool, _os_feature_enabled_impl, const char *domain, const char *feature) {
+    if (strcmp(domain, "SpringBoard") == 0 && strcmp(feature, "Dewey") == 0)
+        return true;
+    return %orig;
 }
-%end
-
-%hook SBHIconManager
-- (bool)iconLocationAllowsBadging:(id)arg1 {
-	bool origValue = %orig;
-	if ( [arg1 isKindOfClass:%c( SBHIconLibraryTableViewController )] || [arg1 isKindOfClass:%c( SBIconLocationAppLibraryCategoryPod )] || [arg1 isKindOfClass:%c( SBIconLocationAppLibraryCategoryPodRecents )] || [arg1 isKindOfClass:%c( SBIconLocationAppLibraryCategoryPodSuggestions )] ) {
-		NSMutableDictionary *defaults = [NSMutableDictionary dictionaryWithContentsOfFile:[NSString stringWithFormat:@"%@/Library/Preferences/com.apple.springboard.plist", NSHomeDirectory()]];
-		bool sbHomeScreenShowsBadgesInAppLibrary = [[defaults objectForKey:@"SBHomeScreenShowsBadgesInAppLibrary"] boolValue];
-		return sbHomeScreenShowsBadgesInAppLibrary;
-	}
-	return origValue;
-}
-%end
 
 %ctor {
 	%init;

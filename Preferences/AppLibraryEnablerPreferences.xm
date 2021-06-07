@@ -14,6 +14,7 @@
  * along with App Library Enabler. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <SpringBoard/SBIconController.h>
 
 #include <Preferences/PSSpecifier.h>
 #include <Preferences/PSListController.h>
@@ -22,14 +23,13 @@
 #define kSettingsChanged @"com.apple.springboard-prefsChanged"
 
 @interface PSSpecifier (AppLibraryEnabler)
-- (void)setValues:(id)arg1 titles:(id)arg2;
+- (void)setValues:(id)values titles:(id)titles;
 @end
 
 @interface DBSHomeScreenListController : PSListController
 @end
 
-@interface SBIconController : UIViewController
-+(id)sharedInstance;
+@interface SBIconController (Additions)
 -(void)_showsBadgesInAppLibraryDidChange;
 @end
 

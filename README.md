@@ -11,4 +11,5 @@ iOS 14 and above
 **No options to configure**
 
 ## Credits:
+* [PoomSmart](https://github.com/PoomSmart) for [contributing to this tweak](https://github.com/tomaszpoliszuk/AppLibraryEnabler/commit/ce141f18a77b1af68b948e616f1660cabcb431ec)
 * [ZethyyXD](https://www.reddit.com/user/ZethyyXD) for testing this tweak on iPadOS

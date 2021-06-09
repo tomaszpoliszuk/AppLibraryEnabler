@@ -18,6 +18,9 @@
 @protocol SBHOccludable
 @end
 
+@interface _SBHLibraryPodIconListView : UIView
+@end
+
 @interface SBHRootSidebarController : UIViewController
 @property (nonatomic, retain) UIViewController *avocadoViewController;
 @end
@@ -177,14 +180,28 @@ typedef struct SBHIconGridSize {
 }
 %end
 
-//	%hook _SBHLibraryPodIconListView
-//	- (CGRect)frame {
-//		CGRect origValue = %orig;
-//		CGRect newContainerFrame = origValue;
-//		newContainerFrame.size.width = ?;
-//		return newContainerFrame;
-//	}
-//	%end
+%hook _SBHLibraryPodIconListView
+- (void)setFrame:(CGRect)frame {
+	CGFloat width = CGRectGetWidth(frame);
+	if (width > 0) {
+		CGRect superviewFrame = self.superview.frame;
+		// (349, 0) (496.8, 1417.71) : (1194, 834)
+		// (169, 0) (496.8, 1417.71) : (834, 1194)
+		if (CGRectGetWidth(superviewFrame) > CGRectGetHeight(superviewFrame)) {
+			frame.origin.x = (CGRectGetWidth(superviewFrame) - (floor(width) * 2)) / 2;
+		}
+	}
+	%orig(frame);
+}
+- (void)setCenter:(CGPoint)center {
+	CGRect superviewFrame = self.superview.frame;
+	if (CGRectGetWidth(superviewFrame) > CGRectGetHeight(superviewFrame)) {
+		center.x = center.x * CGRectGetHeight(superviewFrame) / CGRectGetWidth(superviewFrame);
+	}
+	%orig(center);
+}
+%end
+
 %hook SBIconListView
 - (NSMutableIndexSet *)visibleGridCellIndexesWithMetrics:(SBIconListViewLayoutMetrics *)metrics {
 	if (metrics.columnsUsedForLayout == -1)

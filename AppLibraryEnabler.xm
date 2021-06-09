@@ -36,10 +36,22 @@
 
 @interface SBNestingViewController : UIViewController
 @end
+
 @interface SBFolderController : SBNestingViewController
 @end
+
 @interface SBHLibraryPodFolderController : SBFolderController
 @property (nonatomic,readonly) UIView * containerView;
+@end
+
+@interface SBIconListGridLayoutConfiguration : NSObject
+@property (assign, nonatomic) NSUInteger numberOfLandscapeRows;
+@property (assign, nonatomic) NSUInteger numberOfLandscapeColumns;
+@property (assign, nonatomic) NSUInteger numberOfPortraitRows;
+@property (assign, nonatomic) NSUInteger numberOfPortraitColumns;
+@end
+
+@interface SBIconListGridLayout : NSObject
 @end
 
 %hook SBIconController
@@ -73,13 +85,13 @@
 %hook SBHomeScreenOverlayViewController
 -(CGFloat)presentationProgress {
 	CGFloat origValue = %orig;
-	[[self rightSidebarViewController].view setAlpha:origValue];
+	[self rightSidebarViewController].view.alpha = origValue;
 	return origValue;
 }
 -(SBHRootSidebarController *)contentViewController {
 	SBHRootSidebarController *origValue = %orig;
 	CGRect containerViewFrame = origValue.view.frame;
-	[origValue.view setFrame:containerViewFrame];
+	origValue.view.frame = containerViewFrame;
 	return origValue;
 }
 - (void)viewWillLayoutSubviews {
@@ -100,9 +112,9 @@
 	UIView *searchResultsContainerView = [self valueForKey:@"_searchResultsContainerView"];
 
 	CGRect selfFrame = self.view.frame;
-	[containerView setFrame:selfFrame];
-	[contentContainerView setFrame:selfFrame];
-	[searchResultsContainerView setFrame:selfFrame];
+	containerView.frame = selfFrame;
+	contentContainerView.frame = selfFrame;
+	searchResultsContainerView.frame = selfFrame;
 }
 - (void)_layoutSearchViews {
 	%orig;
@@ -117,8 +129,8 @@
 		width + 200,
 		height + 200
 	);
-	[searchBackdropView setBounds:fullScreenFrame];
-	[searchBackdropView setFrame:fullScreenFrame];
+	searchBackdropView.bounds = fullScreenFrame;
+	searchBackdropView.frame = fullScreenFrame;
 }
 %end
 
@@ -127,7 +139,24 @@
 	%orig;
 	UIView *containerView = [self containerView];
 	CGRect containerFrame = containerView.frame;
-	[self.view setFrame:containerFrame];
+	self.view.frame = containerFrame;
+}
+%end
+
+%hook SBHLibraryPodFolderControllerConfiguration
+- (void)setAllowedOrientations:(NSUInteger)orientation {
+    %orig(30);
+}
+%end
+
+%hook SBHDefaultIconListLayoutProvider
+- (SBIconListGridLayout *)makeLayoutForIconLocation:(NSString *)iconLocation {
+	SBIconListGridLayout *layout = %orig;
+	if ([iconLocation isEqualToString:@"SBIconLocationAppLibrary"]) {
+		SBIconListGridLayoutConfiguration *config = [layout valueForKey:@"_layoutConfiguration"];
+		config.numberOfLandscapeColumns = 8;
+	}
+	return layout;
 }
 %end
 

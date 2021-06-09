@@ -66,6 +66,10 @@
 @property NSUInteger ignoresOverscrollOnLastPageOrientations;
 @end
 
+@interface SBIconListViewLayoutMetrics : NSObject
+@property NSUInteger columnsUsedForLayout;
+@end
+
 typedef struct SBHIconGridSize {
 	uint16_t columns;
 	uint16_t rows;
@@ -181,6 +185,13 @@ typedef struct SBHIconGridSize {
 //		return newContainerFrame;
 //	}
 //	%end
+%hook SBIconListView
+- (NSMutableIndexSet *)visibleGridCellIndexesWithMetrics:(SBIconListViewLayoutMetrics *)metrics {
+	if (metrics.columnsUsedForLayout == -1)
+		metrics.columnsUsedForLayout = 4;
+	return %orig;
+}
+%end
 
 extern "C" bool _os_feature_enabled_impl(const char *domain, const char *feature);
 %hookf(bool, _os_feature_enabled_impl, const char *domain, const char *feature) {

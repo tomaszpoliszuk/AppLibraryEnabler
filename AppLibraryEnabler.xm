@@ -3,7 +3,7 @@
  *
  * App Library Enabler is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License.
+ * the Free Software Foundation, version 3 of the License.
  *
  * App Library Enabler is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,22 +15,17 @@
  */
 
 
-@interface UIView (AppLibraryEnabler)
-- (id)_viewControllerForAncestor;
-@end
-
-@interface SBIconView : UIView
-@end
-
-@interface SBHSearchBar : UIView
-@property (assign,nonatomic) UIEdgeInsets searchTextFieldHorizontalEdgeInsets;
-@end
-
 @protocol SBHOccludable
+@end
+
+@interface SBHRootSidebarController : UIViewController
+@property (nonatomic, retain) UIViewController *avocadoViewController;
 @end
 
 @interface SBHomeScreenOverlayViewController : UIViewController
 @property (nonatomic, retain) UIViewController<SBHOccludable> *rightSidebarViewController;
+@property (nonatomic,readonly) SBHRootSidebarController * contentViewController;
+@property (nonatomic,retain) NSLayoutConstraint * contentWidthConstraint;
 @end
 
 @interface MTMaterialView : UIView
@@ -81,12 +76,25 @@
 	[[self rightSidebarViewController].view setAlpha:origValue];
 	return origValue;
 }
+-(SBHRootSidebarController *)contentViewController {
+	SBHRootSidebarController *origValue = %orig;
+	CGRect containerViewFrame = origValue.view.frame;
+	[origValue.view setFrame:containerViewFrame];
+	return origValue;
+}
+- (void)viewWillLayoutSubviews {
+	%orig;
+	if ( [[self contentViewController].avocadoViewController isKindOfClass:%c(SBHLibraryViewController)] ) {
+		[[self contentWidthConstraint] setConstant:[UIScreen mainScreen].bounds.size.width];
+	} else {
+		[[self contentWidthConstraint] setConstant:393];
+	}
+}
 %end
 
 %hook SBHLibrarySearchController
 - (void)viewDidAppear:(bool)arg1 {
 	%orig;
-	SBHSearchBar *searchBar = [self valueForKey:@"_searchBar"];
 	UIView *containerView = [self valueForKey:@"_containerView"];
 	UIView *contentContainerView = [self valueForKey:@"_contentContainerView"];
 	UIView *searchResultsContainerView = [self valueForKey:@"_searchResultsContainerView"];
@@ -95,13 +103,6 @@
 	[containerView setFrame:selfFrame];
 	[contentContainerView setFrame:selfFrame];
 	[searchResultsContainerView setFrame:selfFrame];
-
-	UIEdgeInsets searchTextFieldHorizontalEdgeInsets = [searchBar searchTextFieldHorizontalEdgeInsets];
-
-	searchTextFieldHorizontalEdgeInsets.left = 23;
-	searchTextFieldHorizontalEdgeInsets.right = 23;
-
-	[searchBar setSearchTextFieldHorizontalEdgeInsets:searchTextFieldHorizontalEdgeInsets];
 }
 - (void)_layoutSearchViews {
 	%orig;
@@ -130,35 +131,14 @@
 }
 %end
 
-%hook _SBHLibraryPodIconListView
-- (CGRect)frame {
-	CGRect origValue = %orig;
-	CGRect newContainerFrame = origValue;
-	newContainerFrame.size.width = 393;
-	return newContainerFrame;
-}
-- (CGRect)iconLayoutRect {
-	CGRect origValue = %orig;
-	CGRect newFrame = origValue;
-	newFrame.size.width = 393;
-	return newFrame;
-}
-
-- (CGSize)iconSpacing {
-	CGSize origValue = %orig;
-	CGSize newSize = origValue;
-	newSize.width = 33;
-	newSize.height = 37;
-	return newSize;
-}
-- (CGSize)effectiveIconSpacing {
-	CGSize origValue = %orig;
-	CGSize newSize = origValue;
-	newSize.width = 33;
-	newSize.height = 37;
-	return newSize;
-}
-%end
+//	%hook _SBHLibraryPodIconListView
+//	- (CGRect)frame {
+//		CGRect origValue = %orig;
+//		CGRect newContainerFrame = origValue;
+//		newContainerFrame.size.width = ?;
+//		return newContainerFrame;
+//	}
+//	%end
 
 extern "C" bool _os_feature_enabled_impl(const char *domain, const char *feature);
 %hookf(bool, _os_feature_enabled_impl, const char *domain, const char *feature) {

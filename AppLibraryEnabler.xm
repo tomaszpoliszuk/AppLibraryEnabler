@@ -34,6 +34,9 @@
 @interface SBHLibrarySearchController : UIViewController
 @end
 
+@interface SBHLibraryViewController : UIViewController
+@end
+
 @interface SBNestingViewController : UIViewController
 @end
 
@@ -54,6 +57,20 @@
 @interface SBIconListGridLayout : NSObject
 @end
 
+@interface SBFolderControllerConfiguration : NSObject
+@property (assign, nonatomic) NSUInteger allowedOrientations;
+@end
+
+@interface SBRootFolderControllerConfiguration : SBFolderControllerConfiguration
+@property NSUInteger folderPageManagementAllowedOrientations;
+@property NSUInteger ignoresOverscrollOnLastPageOrientations;
+@end
+
+typedef struct SBHIconGridSize {
+	uint16_t columns;
+	uint16_t rows;
+} SBHIconGridSize;
+
 %hook SBIconController
 - (bool)isAppLibraryAllowed {
 	return YES;
@@ -61,14 +78,10 @@
 - (bool)isAppLibrarySupported {
 	return YES;
 }
-%end
-
-%hook SBRootFolderView
-- (bool)_shouldIgnoreOverscrollOnLastPageForCurrentOrientation {
-	return YES;
-}
-- (bool)_shouldIgnoreOverscrollOnLastPageForOrientation:(NSInteger)orientation {
-	return YES;
+- (void)iconManager:(SBHIconManager *)iconManager willUseRootFolderControllerConfiguration:(SBRootFolderControllerConfiguration *)configuration {
+    %orig;
+    configuration.folderPageManagementAllowedOrientations = 26;
+    configuration.ignoresOverscrollOnLastPageOrientations = 26;
 }
 %end
 
@@ -83,12 +96,12 @@
 %end
 
 %hook SBHomeScreenOverlayViewController
--(CGFloat)presentationProgress {
+- (CGFloat)presentationProgress {
 	CGFloat origValue = %orig;
 	[self rightSidebarViewController].view.alpha = origValue;
 	return origValue;
 }
--(SBHRootSidebarController *)contentViewController {
+- (SBHRootSidebarController *)contentViewController {
 	SBHRootSidebarController *origValue = %orig;
 	CGRect containerViewFrame = origValue.view.frame;
 	origValue.view.frame = containerViewFrame;
@@ -145,7 +158,7 @@
 
 %hook SBHLibraryPodFolderControllerConfiguration
 - (void)setAllowedOrientations:(NSUInteger)orientation {
-    %orig(30);
+    %orig(26);
 }
 %end
 

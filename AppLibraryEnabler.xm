@@ -69,10 +69,6 @@
 @property NSUInteger ignoresOverscrollOnLastPageOrientations;
 @end
 
-@interface SBIconListViewLayoutMetrics : NSObject
-@property NSUInteger columnsUsedForLayout;
-@end
-
 typedef struct SBHIconGridSize {
 	uint16_t columns;
 	uint16_t rows;
@@ -136,22 +132,6 @@ typedef struct SBHIconGridSize {
 	contentContainerView.frame = selfFrame;
 	searchResultsContainerView.frame = selfFrame;
 }
-- (void)_layoutSearchViews {
-	%orig;
-	MTMaterialView *searchBackdropView = [self valueForKey:@"_searchBackdropView"];
-
-	CGFloat width = [[UIScreen mainScreen] bounds].size.width;
-	CGFloat height = [[UIScreen mainScreen] bounds].size.height;
-
-	CGRect fullScreenFrame = CGRectMake(
-		-100,
-		-100,
-		width + 200,
-		height + 200
-	);
-	searchBackdropView.bounds = fullScreenFrame;
-	searchBackdropView.frame = fullScreenFrame;
-}
 %end
 
 %hook SBHLibraryPodFolderController
@@ -163,60 +143,42 @@ typedef struct SBHIconGridSize {
 }
 %end
 
-%hook SBHLibraryPodFolderControllerConfiguration
-- (void)setAllowedOrientations:(NSUInteger)orientation {
-    %orig(30);
-}
-%end
+// %hook SBHLibraryPodFolderControllerConfiguration
+// - (void)setAllowedOrientations:(NSUInteger)orientation {
+//     %orig(30);
+// }
+// %end
 
-%hook SBHDefaultIconListLayoutProvider
-- (SBIconListGridLayout *)makeLayoutForIconLocation:(NSString *)iconLocation {
-	SBIconListGridLayout *layout = %orig;
-	if ([iconLocation isEqualToString:@"SBIconLocationAppLibrary"]) {
-		SBIconListGridLayoutConfiguration *config = [layout valueForKey:@"_layoutConfiguration"];
-		config.numberOfLandscapeColumns = 8;
-	}
-	return layout;
-}
-%end
+// %hook SBHDefaultIconListLayoutProvider
+// - (SBIconListGridLayout *)makeLayoutForIconLocation:(NSString *)iconLocation {
+// 	SBIconListGridLayout *layout = %orig;
+// 	if ([iconLocation isEqualToString:@"SBIconLocationAppLibrary"]) {
+// 		SBIconListGridLayoutConfiguration *config = [layout valueForKey:@"_layoutConfiguration"];
+// 		config.numberOfLandscapeColumns = 8;
+// 	}
+// 	return layout;
+// }
+// %end
 
-%hook _SBHLibraryPodIconListView
-- (void)setFrame:(CGRect)frame {
-	CGFloat width = CGRectGetWidth(frame);
-	if (width > 0) {
-		CGRect superviewFrame = self.superview.frame;
-		// (349, 0) (496.8, 1417.71) : (1194, 834)
-		// (169, 0) (496.8, 1417.71) : (834, 1194)
-		if (CGRectGetWidth(superviewFrame) > CGRectGetHeight(superviewFrame)) {
-			frame.origin.x = (CGRectGetWidth(superviewFrame) - (floor(width) * 2)) / 2;
-		}
-	}
-	%orig(frame);
-}
-- (void)setCenter:(CGPoint)center {
-	CGRect superviewFrame = self.superview.frame;
-	if (CGRectGetWidth(superviewFrame) > CGRectGetHeight(superviewFrame)) {
-		center.x = center.x * CGRectGetHeight(superviewFrame) / CGRectGetWidth(superviewFrame);
-	}
-	%orig(center);
-}
-%end
-
-%hook SBIconListView
-- (NSMutableIndexSet *)visibleGridCellIndexesWithMetrics:(SBIconListViewLayoutMetrics *)metrics {
-	if (metrics.columnsUsedForLayout == -1)
-		metrics.columnsUsedForLayout = 4;
-	return %orig;
-}
-%end
-
-extern "C" bool _os_feature_enabled_impl(const char *domain, const char *feature);
-%hookf(bool, _os_feature_enabled_impl, const char *domain, const char *feature) {
-	if (strcmp(domain, "SpringBoard") == 0 && strcmp(feature, "Dewey") == 0) {
-		return true;
-	}
-	return %orig;
-}
+// %hook _SBHLibraryPodIconListView
+// - (void)setFrame:(CGRect)frame {
+// 	CGFloat width = CGRectGetWidth(frame);
+// 	if (width > 0) {
+// 		CGRect superviewFrame = self.superview.frame;
+// 		if (CGRectGetWidth(superviewFrame) > CGRectGetHeight(superviewFrame)) {
+// 			frame.origin.x = (CGRectGetWidth(superviewFrame) - (floor(width) * 2)) / 2;
+// 		}
+// 	}
+// 	%orig(frame);
+// }
+// - (void)setCenter:(CGPoint)center {
+// 	CGRect superviewFrame = self.superview.frame;
+// 	if (CGRectGetWidth(superviewFrame) > CGRectGetHeight(superviewFrame)) {
+// 		center.x = center.x * CGRectGetHeight(superviewFrame) / CGRectGetWidth(superviewFrame);
+// 	}
+// 	%orig(center);
+// }
+// %end
 
 %ctor {
 	%init;

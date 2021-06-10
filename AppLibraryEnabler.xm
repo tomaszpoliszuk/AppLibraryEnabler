@@ -143,12 +143,6 @@ typedef struct SBHIconGridSize {
 }
 %end
 
-// %hook SBHLibraryPodFolderControllerConfiguration
-// - (void)setAllowedOrientations:(NSUInteger)orientation {
-//     %orig(30);
-// }
-// %end
-
 // %hook SBHDefaultIconListLayoutProvider
 // - (SBIconListGridLayout *)makeLayoutForIconLocation:(NSString *)iconLocation {
 // 	SBIconListGridLayout *layout = %orig;

@@ -87,8 +87,8 @@ typedef struct SBHIconGridSize {
 }
 - (void)iconManager:(SBHIconManager *)iconManager willUseRootFolderControllerConfiguration:(SBRootFolderControllerConfiguration *)configuration {
     %orig;
-    configuration.folderPageManagementAllowedOrientations = 26;
-    configuration.ignoresOverscrollOnLastPageOrientations = 26;
+    configuration.folderPageManagementAllowedOrientations = 30;
+    configuration.ignoresOverscrollOnLastPageOrientations = 30;
 }
 %end
 
@@ -165,7 +165,7 @@ typedef struct SBHIconGridSize {
 
 %hook SBHLibraryPodFolderControllerConfiguration
 - (void)setAllowedOrientations:(NSUInteger)orientation {
-    %orig(26);
+    %orig(30);
 }
 %end
 

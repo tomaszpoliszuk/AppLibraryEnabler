@@ -19,6 +19,12 @@
 @end
 
 @interface _SBHLibraryPodIconListView : UIView
+@property (nonatomic,copy) NSString * iconLocation;
+@property (assign,nonatomic) CGSize iconSpacing;
+@property (nonatomic,readonly) CGSize effectiveIconSpacing;
+@property (nonatomic,readonly) double horizontalIconPadding;
+@property (nonatomic,readonly) double verticalIconPadding;
+@property (nonatomic,readonly) unsigned long long numberOfDisplayedIconViews;
 @end
 
 @interface SBHRootSidebarController : UIViewController
@@ -73,6 +79,13 @@ typedef struct SBHIconGridSize {
 	uint16_t columns;
 	uint16_t rows;
 } SBHIconGridSize;
+
+typedef struct SBHIconGridSizeClassSizes {
+	SBHIconGridSize small;
+	SBHIconGridSize medium;
+	SBHIconGridSize large;
+	SBHIconGridSize extraLarge;
+} SBHIconGridSizeClassSizes;
 
 %hook SBIconController
 - (bool)isAppLibraryAllowed {
@@ -154,7 +167,7 @@ typedef struct SBHIconGridSize {
 // }
 // %end
 
-// %hook _SBHLibraryPodIconListView
+%hook _SBHLibraryPodIconListView
 // - (void)setFrame:(CGRect)frame {
 // 	CGFloat width = CGRectGetWidth(frame);
 // 	if (width > 0) {
@@ -172,7 +185,36 @@ typedef struct SBHIconGridSize {
 // 	}
 // 	%orig(center);
 // }
-// %end
+- (double)iconContentScale {
+	double origValue = %orig;
+	if ([[self iconLocation] isEqualToString:@"SBIconLocationAppLibrary"]) {
+		return 2;
+	}
+	return origValue;
+}
+- (CGRect)frame {
+	CGRect origValue = %orig;
+	if ([[self iconLocation] isEqualToString:@"SBIconLocationAppLibrary"]) {
+		return self.superview.frame;
+	}
+	return origValue;
+}
+%end
+
+%hook SBHLibraryCategoriesRootFolder
+- (id)initWithDisplayName:(id)displayName maxListCount:(unsigned long long)arg2 listGridSize:(SBHIconGridSize)iconGridSize iconGridSizeClassSizes:(SBHIconGridSizeClassSizes)gridSizeClassSizes {
+	if ( [displayName isEqualToString:@"Categories Folder"] ) {
+
+		SBHIconGridSizeClassSizes newGridSizeClassSizes = gridSizeClassSizes;
+
+		newGridSizeClassSizes.small.rows = 1;
+		newGridSizeClassSizes.small.columns = 1;
+
+		return %orig( displayName, arg2, iconGridSize, newGridSizeClassSizes );
+	}
+	return %orig( displayName, arg2, iconGridSize, gridSizeClassSizes );
+}
+%end
 
 %ctor {
 	%init;

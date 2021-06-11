@@ -1,5 +1,5 @@
 Package: com.tomaszpoliszuk.applibraryenabler
-Depends: firmware (>= 14.0), mobilesubstrate, preferenceloader, cy+model.ipad
+Depends: firmware (>= 14.0), firmware (<< 15.0), mobilesubstrate, preferenceloader, cy+model.ipad
 Name: App Library Enabler
 Version: 1.0
 Architecture: iphoneos-arm

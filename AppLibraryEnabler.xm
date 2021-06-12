@@ -18,14 +18,23 @@
 @protocol SBHOccludable
 @end
 
+@interface _SBHLibraryPodIconListView : UIView
+@property (nonatomic, copy) NSString *iconLocation;
+@property (assign, nonatomic) CGSize iconSpacing;
+@property (nonatomic, readonly) CGSize effectiveIconSpacing;
+@property (nonatomic, readonly) CGFloat horizontalIconPadding;
+@property (nonatomic, readonly) CGFloat verticalIconPadding;
+@property (nonatomic, readonly) NSUInteger numberOfDisplayedIconViews;
+@end
+
 @interface SBHRootSidebarController : UIViewController
 @property (nonatomic, retain) UIViewController *avocadoViewController;
 @end
 
 @interface SBHomeScreenOverlayViewController : UIViewController
 @property (nonatomic, retain) UIViewController<SBHOccludable> *rightSidebarViewController;
-@property (nonatomic,readonly) SBHRootSidebarController * contentViewController;
-@property (nonatomic,retain) NSLayoutConstraint * contentWidthConstraint;
+@property (nonatomic, readonly) SBHRootSidebarController *contentViewController;
+@property (nonatomic, retain) NSLayoutConstraint *contentWidthConstraint;
 @end
 
 @interface MTMaterialView : UIView
@@ -34,13 +43,49 @@
 @interface SBHLibrarySearchController : UIViewController
 @end
 
+@interface SBHLibraryViewController : UIViewController
+@end
+
 @interface SBNestingViewController : UIViewController
 @end
+
 @interface SBFolderController : SBNestingViewController
 @end
+
 @interface SBHLibraryPodFolderController : SBFolderController
-@property (nonatomic,readonly) UIView * containerView;
+@property (nonatomic, readonly) UIView *containerView;
 @end
+
+@interface SBIconListGridLayoutConfiguration : NSObject
+@property (assign, nonatomic) NSUInteger numberOfLandscapeRows;
+@property (assign, nonatomic) NSUInteger numberOfLandscapeColumns;
+@property (assign, nonatomic) NSUInteger numberOfPortraitRows;
+@property (assign, nonatomic) NSUInteger numberOfPortraitColumns;
+@end
+
+@interface SBIconListGridLayout : NSObject
+@end
+
+@interface SBFolderControllerConfiguration : NSObject
+@property (assign, nonatomic) NSUInteger allowedOrientations;
+@end
+
+@interface SBRootFolderControllerConfiguration : SBFolderControllerConfiguration
+@property NSUInteger folderPageManagementAllowedOrientations;
+@property NSUInteger ignoresOverscrollOnLastPageOrientations;
+@end
+
+typedef struct SBHIconGridSize {
+	uint16_t columns;
+	uint16_t rows;
+} SBHIconGridSize;
+
+typedef struct SBHIconGridSizeClassSizes {
+	SBHIconGridSize small;
+	SBHIconGridSize medium;
+	SBHIconGridSize large;
+	SBHIconGridSize extraLarge;
+} SBHIconGridSizeClassSizes;
 
 %hook SBIconController
 - (bool)isAppLibraryAllowed {
@@ -49,14 +94,10 @@
 - (bool)isAppLibrarySupported {
 	return YES;
 }
-%end
-
-%hook SBRootFolderView
-- (bool)_shouldIgnoreOverscrollOnLastPageForCurrentOrientation {
-	return YES;
-}
-- (bool)_shouldIgnoreOverscrollOnLastPageForOrientation:(NSInteger)orientation {
-	return YES;
+- (void)iconManager:(SBHIconManager *)iconManager willUseRootFolderControllerConfiguration:(SBRootFolderControllerConfiguration *)configuration {
+    %orig;
+    configuration.folderPageManagementAllowedOrientations = 30;
+    configuration.ignoresOverscrollOnLastPageOrientations = 30;
 }
 %end
 
@@ -71,20 +112,20 @@
 %end
 
 %hook SBHomeScreenOverlayViewController
--(CGFloat)presentationProgress {
+- (CGFloat)presentationProgress {
 	CGFloat origValue = %orig;
-	[[self rightSidebarViewController].view setAlpha:origValue];
+	[self rightSidebarViewController].view.alpha = origValue;
 	return origValue;
 }
--(SBHRootSidebarController *)contentViewController {
+- (SBHRootSidebarController *)contentViewController {
 	SBHRootSidebarController *origValue = %orig;
 	CGRect containerViewFrame = origValue.view.frame;
-	[origValue.view setFrame:containerViewFrame];
+	origValue.view.frame = containerViewFrame;
 	return origValue;
 }
 - (void)viewWillLayoutSubviews {
 	%orig;
-	if ( [[self contentViewController].avocadoViewController isKindOfClass:%c(SBHLibraryViewController)] ) {
+	if ([[self contentViewController].avocadoViewController isKindOfClass:%c(SBHLibraryViewController)]) {
 		[[self contentWidthConstraint] setConstant:[UIScreen mainScreen].bounds.size.width];
 	} else {
 		[[self contentWidthConstraint] setConstant:393];
@@ -100,25 +141,9 @@
 	UIView *searchResultsContainerView = [self valueForKey:@"_searchResultsContainerView"];
 
 	CGRect selfFrame = self.view.frame;
-	[containerView setFrame:selfFrame];
-	[contentContainerView setFrame:selfFrame];
-	[searchResultsContainerView setFrame:selfFrame];
-}
-- (void)_layoutSearchViews {
-	%orig;
-	MTMaterialView *searchBackdropView = [self valueForKey:@"_searchBackdropView"];
-
-	CGFloat width = [[UIScreen mainScreen] bounds].size.width;
-	CGFloat height = [[UIScreen mainScreen] bounds].size.height;
-
-	CGRect fullScreenFrame = CGRectMake(
-		-100,
-		-100,
-		width + 200,
-		height + 200
-	);
-	[searchBackdropView setBounds:fullScreenFrame];
-	[searchBackdropView setFrame:fullScreenFrame];
+	containerView.frame = selfFrame;
+	contentContainerView.frame = selfFrame;
+	searchResultsContainerView.frame = selfFrame;
 }
 %end
 
@@ -127,26 +152,69 @@
 	%orig;
 	UIView *containerView = [self containerView];
 	CGRect containerFrame = containerView.frame;
-	[self.view setFrame:containerFrame];
+	self.view.frame = containerFrame;
 }
 %end
 
-//	%hook _SBHLibraryPodIconListView
-//	- (CGRect)frame {
-//		CGRect origValue = %orig;
-//		CGRect newContainerFrame = origValue;
-//		newContainerFrame.size.width = ?;
-//		return newContainerFrame;
-//	}
-//	%end
+// %hook SBHDefaultIconListLayoutProvider
+// - (SBIconListGridLayout *)makeLayoutForIconLocation:(NSString *)iconLocation {
+// 	SBIconListGridLayout *layout = %orig;
+// 	if ([iconLocation isEqualToString:@"SBIconLocationAppLibrary"]) {
+// 		SBIconListGridLayoutConfiguration *config = [layout valueForKey:@"_layoutConfiguration"];
+// 		config.numberOfLandscapeColumns = 8;
+// 	}
+// 	return layout;
+// }
+// %end
 
-extern "C" bool _os_feature_enabled_impl(const char *domain, const char *feature);
-%hookf(bool, _os_feature_enabled_impl, const char *domain, const char *feature) {
-	if (strcmp(domain, "SpringBoard") == 0 && strcmp(feature, "Dewey") == 0) {
-		return true;
+%hook _SBHLibraryPodIconListView
+// - (void)setFrame:(CGRect)frame {
+// 	CGFloat width = CGRectGetWidth(frame);
+// 	if (width > 0) {
+// 		CGRect superviewFrame = self.superview.frame;
+// 		if (CGRectGetWidth(superviewFrame) > CGRectGetHeight(superviewFrame)) {
+// 			frame.origin.x = (CGRectGetWidth(superviewFrame) - (floor(width) * 2)) / 2;
+// 		}
+// 	}
+// 	%orig(frame);
+// }
+// - (void)setCenter:(CGPoint)center {
+// 	CGRect superviewFrame = self.superview.frame;
+// 	if (CGRectGetWidth(superviewFrame) > CGRectGetHeight(superviewFrame)) {
+// 		center.x = center.x * CGRectGetHeight(superviewFrame) / CGRectGetWidth(superviewFrame);
+// 	}
+// 	%orig(center);
+// }
+- (CGFloat)iconContentScale {
+	CGFloat origValue = %orig;
+	if ([[self iconLocation] isEqualToString:@"SBIconLocationAppLibrary"]) {
+		return 2;
 	}
-	return %orig;
+	return origValue;
 }
+- (CGRect)frame {
+	CGRect origValue = %orig;
+	if ([[self iconLocation] isEqualToString:@"SBIconLocationAppLibrary"]) {
+		return self.superview.frame;
+	}
+	return origValue;
+}
+%end
+
+%hook SBHLibraryCategoriesRootFolder
+- (id)initWithDisplayName:(id)displayName maxListCount:(NSUInteger)maxListCount listGridSize:(SBHIconGridSize)iconGridSize iconGridSizeClassSizes:(SBHIconGridSizeClassSizes)gridSizeClassSizes {
+	if ([displayName isEqualToString:@"Categories Folder"]) {
+
+		SBHIconGridSizeClassSizes newGridSizeClassSizes = gridSizeClassSizes;
+
+		newGridSizeClassSizes.small.rows = 1;
+		newGridSizeClassSizes.small.columns = 1;
+
+		return %orig( displayName, maxListCount, iconGridSize, newGridSizeClassSizes );
+	}
+	return %orig( displayName, maxListCount, iconGridSize, gridSizeClassSizes );
+}
+%end
 
 %ctor {
 	%init;

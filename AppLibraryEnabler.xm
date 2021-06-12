@@ -19,12 +19,12 @@
 @end
 
 @interface _SBHLibraryPodIconListView : UIView
-@property (nonatomic,copy) NSString * iconLocation;
-@property (assign,nonatomic) CGSize iconSpacing;
-@property (nonatomic,readonly) CGSize effectiveIconSpacing;
-@property (nonatomic,readonly) double horizontalIconPadding;
-@property (nonatomic,readonly) double verticalIconPadding;
-@property (nonatomic,readonly) unsigned long long numberOfDisplayedIconViews;
+@property (nonatomic, copy) NSString * iconLocation;
+@property (assign, nonatomic) CGSize iconSpacing;
+@property (nonatomic, readonly) CGSize effectiveIconSpacing;
+@property (nonatomic, readonly) CGFloat horizontalIconPadding;
+@property (nonatomic, readonly) CGFloat verticalIconPadding;
+@property (nonatomic, readonly) NSUInteger numberOfDisplayedIconViews;
 @end
 
 @interface SBHRootSidebarController : UIViewController
@@ -33,8 +33,8 @@
 
 @interface SBHomeScreenOverlayViewController : UIViewController
 @property (nonatomic, retain) UIViewController<SBHOccludable> *rightSidebarViewController;
-@property (nonatomic,readonly) SBHRootSidebarController * contentViewController;
-@property (nonatomic,retain) NSLayoutConstraint * contentWidthConstraint;
+@property (nonatomic,readonly) SBHRootSidebarController *contentViewController;
+@property (nonatomic,retain) NSLayoutConstraint *contentWidthConstraint;
 @end
 
 @interface MTMaterialView : UIView
@@ -53,7 +53,7 @@
 @end
 
 @interface SBHLibraryPodFolderController : SBFolderController
-@property (nonatomic,readonly) UIView * containerView;
+@property (nonatomic,readonly) UIView *containerView;
 @end
 
 @interface SBIconListGridLayoutConfiguration : NSObject
@@ -185,8 +185,8 @@ typedef struct SBHIconGridSizeClassSizes {
 // 	}
 // 	%orig(center);
 // }
-- (double)iconContentScale {
-	double origValue = %orig;
+- (CGFloat)iconContentScale {
+	CGFloat origValue = %orig;
 	if ([[self iconLocation] isEqualToString:@"SBIconLocationAppLibrary"]) {
 		return 2;
 	}

@@ -19,7 +19,7 @@
 @end
 
 @interface _SBHLibraryPodIconListView : UIView
-@property (nonatomic, copy) NSString * iconLocation;
+@property (nonatomic, copy) NSString *iconLocation;
 @property (assign, nonatomic) CGSize iconSpacing;
 @property (nonatomic, readonly) CGSize effectiveIconSpacing;
 @property (nonatomic, readonly) CGFloat horizontalIconPadding;
@@ -33,8 +33,8 @@
 
 @interface SBHomeScreenOverlayViewController : UIViewController
 @property (nonatomic, retain) UIViewController<SBHOccludable> *rightSidebarViewController;
-@property (nonatomic,readonly) SBHRootSidebarController *contentViewController;
-@property (nonatomic,retain) NSLayoutConstraint *contentWidthConstraint;
+@property (nonatomic, readonly) SBHRootSidebarController *contentViewController;
+@property (nonatomic, retain) NSLayoutConstraint *contentWidthConstraint;
 @end
 
 @interface MTMaterialView : UIView
@@ -53,7 +53,7 @@
 @end
 
 @interface SBHLibraryPodFolderController : SBFolderController
-@property (nonatomic,readonly) UIView *containerView;
+@property (nonatomic, readonly) UIView *containerView;
 @end
 
 @interface SBIconListGridLayoutConfiguration : NSObject
@@ -125,7 +125,7 @@ typedef struct SBHIconGridSizeClassSizes {
 }
 - (void)viewWillLayoutSubviews {
 	%orig;
-	if ( [[self contentViewController].avocadoViewController isKindOfClass:%c(SBHLibraryViewController)] ) {
+	if ([[self contentViewController].avocadoViewController isKindOfClass:%c(SBHLibraryViewController)]) {
 		[[self contentWidthConstraint] setConstant:[UIScreen mainScreen].bounds.size.width];
 	} else {
 		[[self contentWidthConstraint] setConstant:393];
@@ -202,17 +202,17 @@ typedef struct SBHIconGridSizeClassSizes {
 %end
 
 %hook SBHLibraryCategoriesRootFolder
-- (id)initWithDisplayName:(id)displayName maxListCount:(unsigned long long)arg2 listGridSize:(SBHIconGridSize)iconGridSize iconGridSizeClassSizes:(SBHIconGridSizeClassSizes)gridSizeClassSizes {
-	if ( [displayName isEqualToString:@"Categories Folder"] ) {
+- (id)initWithDisplayName:(id)displayName maxListCount:(NSUInteger)maxListCount listGridSize:(SBHIconGridSize)iconGridSize iconGridSizeClassSizes:(SBHIconGridSizeClassSizes)gridSizeClassSizes {
+	if ([displayName isEqualToString:@"Categories Folder"]) {
 
 		SBHIconGridSizeClassSizes newGridSizeClassSizes = gridSizeClassSizes;
 
 		newGridSizeClassSizes.small.rows = 1;
 		newGridSizeClassSizes.small.columns = 1;
 
-		return %orig( displayName, arg2, iconGridSize, newGridSizeClassSizes );
+		return %orig( displayName, maxListCount, iconGridSize, newGridSizeClassSizes );
 	}
-	return %orig( displayName, arg2, iconGridSize, gridSizeClassSizes );
+	return %orig( displayName, maxListCount, iconGridSize, gridSizeClassSizes );
 }
 %end
 
